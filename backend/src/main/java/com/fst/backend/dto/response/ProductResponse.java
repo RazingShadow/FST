@@ -1,29 +1,16 @@
-package com.fst.backend.persistence.entity;
+package com.fst.backend.dto.response;
 
-import jakarta.persistence.*;
-import org.springframework.data.annotation.Id;
-
-@Entity
-@Table(name = "products")
-public class ProductEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ProductResponse {
     private Long id;
-
-    @Column(nullable = false)
     private String name;
-
     private String description;
-
-    @Column(nullable = false)
     private String category;
-
-    @Column(nullable = false)
     private double price;
 
-    public ProductEntity() { }
+    public ProductResponse() {}
 
-    public ProductEntity(String name, String description, String category, double price) {
+    public ProductResponse(Long id, String name, String description, String category, double price) {
+        this.id = id;
         this.name = name;
         this.description = description;
         this.category = category;
@@ -46,4 +33,5 @@ public class ProductEntity {
 
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
+
 }

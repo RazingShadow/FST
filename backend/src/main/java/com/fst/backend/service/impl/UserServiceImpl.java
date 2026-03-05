@@ -1,7 +1,7 @@
 package com.fst.backend.service.impl;
 
 import com.fst.backend.dto.exception.UserNotFoundException;
-import com.fst.backend.dto.mapper.UserResponseMapper;
+import com.fst.backend.dto.mapper.UserMapper;
 import com.fst.backend.dto.request.UserRequest;
 import com.fst.backend.dto.response.UserResponse;
 import com.fst.backend.persistence.entity.UserEntity;
@@ -19,65 +19,60 @@ import java.util.Optional;
 @Transactional
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final UserResponseMapper userResponseMapper;
+    private final UserMapper userMapper;
 
     private final PasswordHasher passwordHasher; // ToDO: inject correct encoder
 
     public UserServiceImpl(
             UserRepository userRepository,
-            UserResponseMapper userResponseMapper,
+            UserMapper userResponseMapper,
             PasswordHasher passwordHasher
     ) {
         this.userRepository = userRepository;
-        this.userResponseMapper = userResponseMapper;
+        this.userMapper = userResponseMapper;
         this.passwordHasher = passwordHasher;
     }
     @Override
-    public UserResponse createUser(UserRequest request) {
-        UserEntity user = new UserEntity(
-                request.getUsername(),
-                request.getEmail(),
-                passwordHasher.hashPassword(request.getPassword()),
-                request.getPrivilegeLevel()
-        );
-        userRepository.save(user); // save transient entity to repository, get back managed entity with ID
-        return userResponseMapper.toResponse(user); // map managed entity to response DTO
+    public UserResponse createUser(UserRequest userRequest) {
+        UserEntity userEntity = userMapper.toEntity(userRequest);
+        userRepository.save(userEntity); // save transient entity to repository, get back managed entity with ID
+        return userMapper.toResponse(userEntity); // map managed entity to response DTO
     }
 
     @Override
-    public UserResponse updateUser(Long id, UserRequest request) {
+    public UserResponse updateUser(Long id, UserRequest userRequest) {
 
         UserEntity existing = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        applyUpdates(existing, request);
+        applyUpdates(existing, userRequest);
 
-        return userResponseMapper.toResponse(userRepository.save(existing));
+        return userMapper.toResponse(userRepository.save(existing));
     }
 
-    private void applyUpdates(UserEntity entity, UserRequest request) {
+    private void applyUpdates(UserEntity userEntity, UserRequest userRequest) {
 
-        Optional.ofNullable(request.getUsername())
-                .ifPresent(entity::setUsername);
+        Optional.ofNullable(userRequest.getUsername())
+                .ifPresent(userEntity::setUsername);
 
-        Optional.ofNullable(request.getEmail())
-                .ifPresent(entity::setEmail);
+        Optional.ofNullable(userRequest.getEmail())
+                .ifPresent(userEntity::setEmail);
 
-        Optional.ofNullable(request.getPassword())
+        Optional.ofNullable(userRequest.getPassword())
                 .map(passwordHasher::hashPassword)
-                .ifPresent(entity::setPasswordHash);
+                .ifPresent(userEntity::setPasswordHash);
 
-        Optional.ofNullable(request.getEnabled())
-                .ifPresent(entity::setEnabled);
+        Optional.ofNullable(userRequest.getEnabled())
+                .ifPresent(userEntity::setEnabled);
 
-        Optional.ofNullable(request.getPrivilegeLevel())
-                .ifPresent(entity::setPrivilegeLevel);
+        Optional.ofNullable(userRequest.getPrivilegeLevel())
+                .ifPresent(userEntity::setPrivilegeLevel);
     }
 
     @Override
     public UserResponse getUserById(Long id) {
         return userRepository.findById(id)
-                .map(userResponseMapper::toResponse)
+                .map(userMapper::toResponse)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
@@ -91,10 +86,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(userResponseMapper::toResponse)
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::toResponse)
                 .toList();
     }
-
-
 }

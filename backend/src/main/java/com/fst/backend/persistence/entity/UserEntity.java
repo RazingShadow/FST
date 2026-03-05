@@ -26,8 +26,6 @@ public class UserEntity {
     @Column(nullable = false)
     private Boolean enabled;
 
-    // Constructors
-
     public UserEntity() { }
 
     public UserEntity(String username, String email, String passwordHash, UserPrivilegeLevel privilegeLevel) {
@@ -37,8 +35,6 @@ public class UserEntity {
         this.privilegeLevel = privilegeLevel;
         this.enabled = true;
     }
-
-    // Getters and Setters
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
